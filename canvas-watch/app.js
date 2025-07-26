@@ -12,6 +12,13 @@ const ctx = canvas.getContext("2d");
 // Show seconds flag for clock display
 let showSeconds = true;
 
+// Global sound volume (0.0 – 1.0)
+let soundVolume = 0.5;
+
+// UI rectangles for sound controls
+const PLAY_BUTTON_RECT = { x: 40, y: 520, width: 200, height: 50 };
+const VOLUME_BAR_RECT = { x: 300, y: 530, width: 250, height: 30 };
+
 // Define timer rectangles and state
 class CountdownTimer {
   constructor(label, seconds, rect, sound = "internal") {
@@ -178,6 +185,18 @@ canvas.addEventListener("click", (e) => {
     return; // do not process timers for this click
   }
 
+  // Sound controls handling
+  if (contains(PLAY_BUTTON_RECT, clickX, clickY)) {
+    playAlert("internal");
+    return;
+  }
+
+  if (contains(VOLUME_BAR_RECT, clickX, clickY)) {
+    const relative = (clickX - VOLUME_BAR_RECT.x) / VOLUME_BAR_RECT.width;
+    soundVolume = Math.max(0, Math.min(1, relative));
+    return;
+  }
+
   timers.forEach((timer) => {
     if (timer.contains(clickX, clickY)) {
       // Click inside this timer's area
@@ -216,6 +235,9 @@ function animate(now) {
     timer.draw(ctx);
   });
 
+  // Draw sound controls
+  drawSoundControls();
+
   requestAnimationFrame(animate);
 }
 
@@ -250,7 +272,7 @@ function playBeep() {
 
     oscillator.type = "sine";
     oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
-    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gainNode.gain.setValueAtTime(soundVolume, audioCtx.currentTime);
 
     oscillator.connect(gainNode);
     gainNode.connect(audioCtx.destination);
@@ -290,8 +312,70 @@ function playAlert(sound) {
   } else {
     // Play mp3 only once
     const audio = new Audio(sound);
+    audio.volume = soundVolume;
     audio.play().catch(() => {});
   }
 }
 // Kick off the animation loop
 requestAnimationFrame(animate);
+
+// Utility to check point in rect
+function contains(rect, px, py) {
+  return (
+    px >= rect.x &&
+    px <= rect.x + rect.width &&
+    py >= rect.y &&
+    py <= rect.y + rect.height
+  );
+}
+
+// Draw sound controls
+function drawSoundControls() {
+  ctx.save();
+
+  // Play button
+  ctx.strokeStyle = "#888";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(
+    PLAY_BUTTON_RECT.x,
+    PLAY_BUTTON_RECT.y,
+    PLAY_BUTTON_RECT.width,
+    PLAY_BUTTON_RECT.height
+  );
+  ctx.font = "24px monospace";
+  ctx.fillStyle = "#fff";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(
+    "Test Sound",
+    PLAY_BUTTON_RECT.x + PLAY_BUTTON_RECT.width / 2,
+    PLAY_BUTTON_RECT.y + PLAY_BUTTON_RECT.height / 2
+  );
+
+  // Volume bar outline
+  ctx.strokeRect(
+    VOLUME_BAR_RECT.x,
+    VOLUME_BAR_RECT.y,
+    VOLUME_BAR_RECT.width,
+    VOLUME_BAR_RECT.height
+  );
+
+  // Filled portion
+  ctx.fillStyle = "#0f0";
+  ctx.fillRect(
+    VOLUME_BAR_RECT.x,
+    VOLUME_BAR_RECT.y,
+    VOLUME_BAR_RECT.width * soundVolume,
+    VOLUME_BAR_RECT.height
+  );
+
+  // Volume text
+  ctx.fillStyle = "#fff";
+  ctx.font = "18px monospace";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "bottom";
+  const percent = Math.round(soundVolume * 100);
+  ctx.fillText(`Vol ${percent}%`, VOLUME_BAR_RECT.x, VOLUME_BAR_RECT.y - 2);
+
+  ctx.restore();
+}
