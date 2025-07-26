@@ -204,8 +204,23 @@ class CountdownTimer {
 
   // Render the timer rectangle and its content
   draw(ctx) {
-    // Draw rectangle
     ctx.save();
+    // Draw progress fill (bottom to top)
+    const progress = this.remaining / this.initial; // 1.0 -> full, 0 -> empty
+    if (progress > 0) {
+      ctx.fillStyle = this.running ? currentTheme.active : currentTheme.stroke;
+      ctx.globalAlpha = 0.25; // semi-transparent so text remains legible
+      const fillHeight = this.rect.height * progress;
+      ctx.fillRect(
+        this.rect.x,
+        this.rect.y + this.rect.height - fillHeight,
+        this.rect.width,
+        fillHeight
+      );
+      ctx.globalAlpha = 1;
+    }
+
+    // Draw rectangle border
     ctx.strokeStyle = currentTheme.stroke;
     ctx.lineWidth = 2;
     ctx.strokeRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
