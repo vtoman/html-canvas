@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Canvas Watch</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #222;
+        color: #fff;
+        font-family: monospace;
+      }
+
+      #watch {
+        background: #000;
+        border: 2px solid #555;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="watch" width="600" height="600"></canvas>
+
+    <!-- Timer configuration -->
+    <script src="timerConfig.js"></script>
+    <!-- Main application script -->
+    <script src="app.js"></script>
+  </body>
+</html>
