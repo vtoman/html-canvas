@@ -11,13 +11,14 @@ const ctx = canvas.getContext("2d");
 
 // Define timer rectangles and state
 class CountdownTimer {
-  constructor(label, seconds, rect) {
+  constructor(label, seconds, rect, sound = "internal") {
     this.label = label; // Display label (e.g., "5:00")
     this.initial = seconds; // Initial duration in seconds
     this.remaining = seconds; // Remaining time in seconds
     this.running = false; // Is the timer currently counting down?
     this.lastUpdate = 0; // Timestamp of last update (ms)
     this.pausedAt = 0; // Timestamp when paused (ms)
+    this.sound = sound; // "internal" or mp3 path
     this.rect = rect; // { x, y, width, height }
   }
 
@@ -48,7 +49,7 @@ class CountdownTimer {
     if (this.remaining <= 0) {
       this.remaining = 0;
       this.running = false;
-      playBeepSequence(3, 1000); // three beeps with 1-second intervals
+      playAlert(this.sound); // choose sound based on config
       // Reset back to the initial value after the beeps
       setTimeout(() => this.reset(), 3 * 1000);
     }
@@ -129,18 +130,33 @@ function parseTimeStringToSeconds(timeStr) {
 // Build CountdownTimer objects from global configuration array
 function buildTimers() {
   const config = Array.isArray(window.TIMER_CONFIG) ? window.TIMER_CONFIG : [];
-  return config.map((timeStr, idx) => {
-    const totalSeconds = parseTimeStringToSeconds(timeStr);
+  return config.map((item, idx) => {
+    // Support both string and object entries
+    let label, sound;
+    if (typeof item === "string") {
+      label = item;
+      sound = "internal";
+    } else {
+      label = item.label;
+      sound = item.sound || "internal";
+    }
+
+    const totalSeconds = parseTimeStringToSeconds(label);
     const col = idx % 3;
     const row = Math.floor(idx / 3);
     const x = LEFT_MARGIN + col * (BUTTON_WIDTH + GAP_X);
     const y = TOP_MARGIN + row * ROW_HEIGHT;
-    return new CountdownTimer(timeStr, totalSeconds, {
-      x,
-      y,
-      width: BUTTON_WIDTH,
-      height: BUTTON_HEIGHT,
-    });
+    return new CountdownTimer(
+      label,
+      totalSeconds,
+      {
+        x,
+        y,
+        width: BUTTON_WIDTH,
+        height: BUTTON_HEIGHT,
+      },
+      sound
+    );
   });
 }
 
@@ -237,6 +253,28 @@ function playBeep() {
 function playBeepSequence(count = 3, interval = 1000) {
   for (let i = 0; i < count; i++) {
     setTimeout(playBeep, i * interval);
+  }
+}
+
+// Play mp3 file sequence (three plays by default)
+function playMp3Sequence(src, count = 3, interval = 1000) {
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const audio = new Audio(src);
+      audio.play().catch(() => {});
+    }, i * interval);
+  }
+}
+
+// Decide which alert to play
+function playAlert(sound) {
+  if (!sound || sound === "internal") {
+    // Three internal beeps
+    playBeepSequence(3, 1000);
+  } else {
+    // Play mp3 only once
+    const audio = new Audio(sound);
+    audio.play().catch(() => {});
   }
 }
 // Kick off the animation loop
