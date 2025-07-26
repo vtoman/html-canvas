@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scrolling Text – Viktor Car</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #000; /* Black background */
+      }
+
+      canvas {
+        display: block;
+        margin: 0 auto;
+        background: #000; /* Ensure canvas itself is black */
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="scrollCanvas"></canvas>
+
+    <script>
+      // Grab canvas and context
+      const canvas = document.getElementById("scrollCanvas");
+      const ctx = canvas.getContext("2d");
+
+      // Configuration
+      const text = "Viktor Car, bolje reći Kralj";
+      const colors = [
+        "#f44336", // red
+        "#ff9800", // orange
+        "#ffeb3b", // yellow
+        "#4caf50", // green
+        "#00bcd4", // cyan
+        "#2196f3", // blue
+        "#9c27b0", // purple
+        "#ffffff", // white
+      ];
+      // Movement speed in *pixels per second* (time-based for smoother motion)
+      const SPEED = 200;
+
+      // Declare variables that will be set during resize
+      let colorIndex = 0;
+      let textWidth;
+      let x;
+
+      // Resize the canvas to fill the window and recalculate metrics
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Update font size based on height for responsiveness
+        const fontSize = Math.floor(canvas.height * 0.15); // 15% of height
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        ctx.textBaseline = "middle";
+
+        // Measure text width with the new font settings
+        textWidth = ctx.measureText(text).width;
+
+        // On first run or when the text is off-screen, reset x to right edge
+        if (typeof x === "undefined" || x + textWidth < 0 || x > canvas.width) {
+          x = canvas.width;
+        }
+      }
+
+      // Handle window resizes gracefully
+      window.addEventListener("resize", resize);
+
+      // Initial call to set canvas size and metrics
+      resize();
+
+      // Keep track of the previous frame time so we can calculate delta-time
+      let lastTime;
+
+      // Animation loop (timestamp is provided by requestAnimationFrame)
+      function animate(timestamp) {
+        if (lastTime === undefined) lastTime = timestamp; // first frame init
+
+        // Calculate time difference in seconds
+        const delta = (timestamp - lastTime) / 1000;
+        lastTime = timestamp;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw text
+        ctx.fillStyle = colors[colorIndex];
+        ctx.fillText(text, x, canvas.height / 2);
+
+        // Move text left based on elapsed time
+        x -= SPEED * delta;
+
+        // If text has completely left the screen, reset position and switch color
+        if (x + textWidth < 0) {
+          colorIndex = (colorIndex + 1) % colors.length;
+          x = canvas.width;
+          // Re-measure in case the font changed
+          textWidth = ctx.measureText(text).width;
+        }
+
+        requestAnimationFrame(animate);
+      }
+
+      // Start the animation
+      requestAnimationFrame(animate);
+    </script>
+  </body>
+</html>
