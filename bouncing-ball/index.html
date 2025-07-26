@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bouncing Ball – HTML Canvas Demo</title>
+    <style>
+      /* Center the canvas on the page */
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #111;
+      }
+
+      canvas {
+        background: #fff;
+        border: 2px solid #000;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      }
+
+      .instructions {
+        position: absolute;
+        top: 10px;
+        color: #fff;
+        font-family: sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="instructions">
+      Click anywhere on the canvas to restart the ball.
+    </div>
+    <canvas id="ballCanvas" width="500" height="400"></canvas>
+
+    <script>
+      const canvas = document.getElementById("ballCanvas");
+      const ctx = canvas.getContext("2d");
+
+      const BALL_RADIUS = 15;
+      let x = canvas.width / 2;
+      let y = canvas.height / 2;
+      let dx = 4;
+      let dy = 3;
+
+      function resetBall() {
+        x = canvas.width / 2;
+        y = canvas.height / 2;
+        // Random velocity between -5 and 5, excluding very slow speeds
+        dx = (Math.random() * 6 + 2) * (Math.random() > 0.5 ? 1 : -1);
+        dy = (Math.random() * 6 + 2) * (Math.random() > 0.5 ? 1 : -1);
+      }
+
+      function drawBall() {
+        ctx.beginPath();
+        ctx.arc(x, y, BALL_RADIUS, 0, Math.PI * 2);
+        ctx.fillStyle = "#3498db";
+        ctx.fill();
+        ctx.closePath();
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBall();
+
+        // Bounce horizontally
+        if (x + dx > canvas.width - BALL_RADIUS || x + dx < BALL_RADIUS) {
+          dx = -dx;
+        }
+
+        // Bounce vertically
+        if (y + dy > canvas.height - BALL_RADIUS || y + dy < BALL_RADIUS) {
+          dy = -dy;
+        }
+
+        x += dx;
+        y += dy;
+
+        requestAnimationFrame(draw);
+      }
+
+      canvas.addEventListener("click", resetBall);
+
+      // Start animation loop
+      draw();
+    </script>
+  </body>
+</html>
