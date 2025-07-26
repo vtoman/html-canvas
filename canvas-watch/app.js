@@ -9,6 +9,9 @@
 const canvas = document.getElementById("watch");
 const ctx = canvas.getContext("2d");
 
+// Show seconds flag for clock display
+let showSeconds = true;
+
 // Define timer rectangles and state
 class CountdownTimer {
   constructor(label, seconds, rect, sound = "internal") {
@@ -169,6 +172,12 @@ canvas.addEventListener("click", (e) => {
   const clickX = e.clientX - rect.left;
   const clickY = e.clientY - rect.top;
 
+  // Check if click is on the clock area (top portion of canvas)
+  if (clickY >= 20 && clickY <= 120) {
+    showSeconds = !showSeconds;
+    return; // do not process timers for this click
+  }
+
   timers.forEach((timer) => {
     if (timer.contains(clickX, clickY)) {
       // Click inside this timer's area
@@ -213,7 +222,14 @@ function animate(now) {
 // Draw current system time (HH:MM:SS) at the top-middle of the canvas
 function drawCurrentTime() {
   const now = new Date();
-  const timeStr = now.toLocaleTimeString("en-GB", { hour12: false });
+  let timeStr;
+  if (showSeconds) {
+    timeStr = now.toLocaleTimeString("en-GB", { hour12: false });
+  } else {
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    timeStr = `${hh}:${mm}`;
+  }
 
   ctx.save();
   ctx.fillStyle = "#0f0";
