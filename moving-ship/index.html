@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Moving Ship Canvas Demo</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #000; /* Fallback for when canvas hasn’t filled yet */
+      }
+
+      canvas {
+        display: block; /* Remove default inline padding */
+        background: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+
+      // Resize the canvas to fill the window
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+
+      window.addEventListener("resize", resize);
+      resize();
+
+      // Ship state
+      const ship = {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        angle: 0, // Radians. 0 points upward (negative y direction)
+        size: 40, // Overall reference size of the sprite
+        speed: 0,
+        maxSpeed: 6,
+        friction: 0.99,
+      };
+
+      // Track pressed keys
+      const keys = {
+        ArrowLeft: false,
+        ArrowRight: false,
+        ArrowUp: false,
+        ArrowDown: false,
+      };
+
+      window.addEventListener("keydown", (e) => {
+        if (e.code in keys) {
+          keys[e.code] = true;
+        }
+      });
+
+      window.addEventListener("keyup", (e) => {
+        if (e.code in keys) {
+          keys[e.code] = false;
+        }
+      });
+
+      function update() {
+        // Rotation
+        const ROT_SPEED = 0.055; // Radians per frame when key held
+        if (keys.ArrowLeft) ship.angle -= ROT_SPEED;
+        if (keys.ArrowRight) ship.angle += ROT_SPEED;
+
+        // Thrust forward/backward
+        const THRUST = 0.15; // Acceleration per frame
+        if (keys.ArrowUp) ship.speed += THRUST;
+        if (keys.ArrowDown) ship.speed -= THRUST;
+
+        // Clamp speed
+        ship.speed = Math.max(
+          -ship.maxSpeed,
+          Math.min(ship.speed, ship.maxSpeed)
+        );
+
+        // Apply friction to gradually slow the ship when not accelerating
+        ship.speed *= ship.friction;
+
+        // Update position based on current angle and speed
+        ship.x += Math.sin(ship.angle) * ship.speed;
+        ship.y -= Math.cos(ship.angle) * ship.speed; // Negative because canvas y-axis is downward
+
+        // Screen wrapping
+        if (ship.x > canvas.width) ship.x = 0;
+        if (ship.x < 0) ship.x = canvas.width;
+        if (ship.y > canvas.height) ship.y = 0;
+        if (ship.y < 0) ship.y = canvas.height;
+      }
+
+      function drawShip() {
+        ctx.save();
+        ctx.translate(ship.x, ship.y);
+        ctx.rotate(ship.angle);
+
+        const s = ship.size;
+        ctx.fillStyle = "#fff";
+
+        // Nose (triangle)
+        ctx.beginPath();
+        ctx.moveTo(0, -s * 0.5);
+        ctx.lineTo(s * 0.25, -s * 0.2);
+        ctx.lineTo(-s * 0.25, -s * 0.2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Body (rectangle)
+        ctx.fillRect(-s * 0.15, -s * 0.2, s * 0.3, s * 0.6);
+
+        // Wings (triangles)
+        ctx.beginPath();
+        ctx.moveTo(s * 0.15, 0);
+        ctx.lineTo(s * 0.45, s * 0.25);
+        ctx.lineTo(s * 0.15, s * 0.25);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.15, 0);
+        ctx.lineTo(-s * 0.45, s * 0.25);
+        ctx.lineTo(-s * 0.15, s * 0.25);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      function render() {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        drawShip();
+      }
+
+      function gameLoop() {
+        update();
+        render();
+        requestAnimationFrame(gameLoop);
+      }
+
+      gameLoop();
+    </script>
+  </body>
+</html>
