@@ -68,9 +68,64 @@ const THEMES = [
     stroke: "#666666",
     accent: "#97d9ff",
   },
+  {
+    name: "Crimson",
+    body: "#2b1113",
+    canvasBg: "#16090a",
+    text: "#ffd7d7",
+    active: "#ff4d4d",
+    stroke: "#662222",
+    accent: "#ff4d4d",
+  },
+  {
+    name: "Teal",
+    body: "#112b2b",
+    canvasBg: "#081616",
+    text: "#d7ffff",
+    active: "#4dffff",
+    stroke: "#226666",
+    accent: "#4dffff",
+  },
+  {
+    name: "Midnight",
+    body: "#101020",
+    canvasBg: "#060612",
+    text: "#ccd1ff",
+    active: "#6b74ff",
+    stroke: "#303050",
+    accent: "#6b74ff",
+  },
+  {
+    name: "Sunset",
+    body: "#2b1a11",
+    canvasBg: "#140d08",
+    text: "#ffdccc",
+    active: "#ff9966",
+    stroke: "#66422a",
+    accent: "#ff9966",
+  },
+  {
+    name: "Olive",
+    body: "#212b1d",
+    canvasBg: "#0e140a",
+    text: "#e1ffd7",
+    active: "#a6ff66",
+    stroke: "#445733",
+    accent: "#a6ff66",
+  },
+  {
+    name: "Cyber",
+    body: "#1a1d28",
+    canvasBg: "#0d0f14",
+    text: "#d7e8ff",
+    active: "#ff00ff",
+    stroke: "#555577",
+    accent: "#ff00ff",
+  },
 ];
 
-let themeIndex = 0;
+let savedIndex = Number(localStorage.getItem("themeIndex"));
+let themeIndex = isNaN(savedIndex) ? 0 : savedIndex;
 let currentTheme = THEMES[themeIndex];
 
 function applyTheme() {
@@ -79,6 +134,7 @@ function applyTheme() {
 }
 
 applyTheme();
+localStorage.setItem("themeIndex", themeIndex);
 
 // Square button to change theme (20×20 px in upper-right corner)
 const THEME_BUTTON_RECT = {
@@ -88,11 +144,13 @@ const THEME_BUTTON_RECT = {
   height: 20,
 };
 
-// Show seconds flag for clock display
-let showSeconds = true;
+// Show seconds flag for clock display (persisted)
+let storedShow = localStorage.getItem("showSeconds");
+let showSeconds = storedShow === null ? true : storedShow === "true";
 
-// Global sound volume (0.0 – 1.0)
-let soundVolume = 0.5;
+// Global sound volume (0.0 – 1.0) (persisted)
+let storedVol = Number(localStorage.getItem("soundVolume"));
+let soundVolume = isNaN(storedVol) ? 0.5 : Math.max(0, Math.min(1, storedVol));
 
 // UI rectangles for sound controls
 const PLAY_BUTTON_RECT = { x: 40, y: 520, width: 200, height: 50 };
@@ -263,12 +321,14 @@ canvas.addEventListener("click", (e) => {
     themeIndex = (themeIndex + 1) % THEMES.length;
     currentTheme = THEMES[themeIndex];
     applyTheme();
+    localStorage.setItem("themeIndex", themeIndex);
     return;
   }
 
   // Check if click is on the clock area (top portion of canvas)
   if (clickY >= 20 && clickY <= 120) {
     showSeconds = !showSeconds;
+    localStorage.setItem("showSeconds", showSeconds);
     return; // do not process timers for this click
   }
 
@@ -281,6 +341,7 @@ canvas.addEventListener("click", (e) => {
   if (contains(VOLUME_BAR_RECT, clickX, clickY)) {
     const relative = (clickX - VOLUME_BAR_RECT.x) / VOLUME_BAR_RECT.width;
     soundVolume = Math.max(0, Math.min(1, relative));
+    localStorage.setItem("soundVolume", soundVolume);
     return;
   }
 
