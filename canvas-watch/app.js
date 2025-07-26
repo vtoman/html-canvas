@@ -9,6 +9,85 @@
 const canvas = document.getElementById("watch");
 const ctx = canvas.getContext("2d");
 
+// ----------------------------
+// Theme support
+// ----------------------------
+
+const THEMES = [
+  {
+    name: "Dark",
+    body: "#222",
+    canvasBg: "#000",
+    text: "#ffffff",
+    active: "#00ff00",
+    stroke: "#555555",
+    accent: "#00ff00",
+  },
+  {
+    name: "Brown",
+    body: "#3b2e2a",
+    canvasBg: "#201914",
+    text: "#f5e8d4",
+    active: "#ffcc66",
+    stroke: "#8b6b47",
+    accent: "#ffcc66",
+  },
+  {
+    name: "Blue",
+    body: "#1d2733",
+    canvasBg: "#0c151d",
+    text: "#d7e9ff",
+    active: "#4ab3ff",
+    stroke: "#345",
+    accent: "#4ab3ff",
+  },
+  {
+    name: "Purple",
+    body: "#2a1d3b",
+    canvasBg: "#170f26",
+    text: "#e9d7ff",
+    active: "#c65bff",
+    stroke: "#55407b",
+    accent: "#c65bff",
+  },
+  {
+    name: "Green",
+    body: "#1d3323",
+    canvasBg: "#0f2014",
+    text: "#d7ffd7",
+    active: "#66ff66",
+    stroke: "#476b47",
+    accent: "#66ff66",
+  },
+  {
+    name: "Grey",
+    body: "#2e2e2e",
+    canvasBg: "#111111",
+    text: "#e0e0e0",
+    active: "#97d9ff",
+    stroke: "#666666",
+    accent: "#97d9ff",
+  },
+];
+
+let themeIndex = 0;
+let currentTheme = THEMES[themeIndex];
+
+function applyTheme() {
+  document.body.style.background = currentTheme.body;
+  canvas.style.background = currentTheme.canvasBg;
+}
+
+applyTheme();
+
+// Square button to change theme (20×20 px in upper-right corner)
+const THEME_BUTTON_RECT = {
+  x: canvas.width - 30,
+  y: 20,
+  width: 20,
+  height: 20,
+};
+
 // Show seconds flag for clock display
 let showSeconds = true;
 
@@ -69,12 +148,12 @@ class CountdownTimer {
   draw(ctx) {
     // Draw rectangle
     ctx.save();
-    ctx.strokeStyle = "#888";
+    ctx.strokeStyle = currentTheme.stroke;
     ctx.lineWidth = 2;
     ctx.strokeRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
 
     // Choose text color based on state
-    ctx.fillStyle = this.running ? "#0f0" : "#fff";
+    ctx.fillStyle = this.running ? currentTheme.active : currentTheme.text;
 
     // Prepare text
     const text = this.formatDisplay();
@@ -179,6 +258,14 @@ canvas.addEventListener("click", (e) => {
   const clickX = e.clientX - rect.left;
   const clickY = e.clientY - rect.top;
 
+  // Theme button handling (highest priority)
+  if (contains(THEME_BUTTON_RECT, clickX, clickY)) {
+    themeIndex = (themeIndex + 1) % THEMES.length;
+    currentTheme = THEMES[themeIndex];
+    applyTheme();
+    return;
+  }
+
   // Check if click is on the clock area (top portion of canvas)
   if (clickY >= 20 && clickY <= 120) {
     showSeconds = !showSeconds;
@@ -223,8 +310,9 @@ canvas.addEventListener("click", (e) => {
 
 // Main animation loop
 function animate(now) {
-  // Clear canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Clear canvas with background color
+  ctx.fillStyle = currentTheme.canvasBg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Draw current time at top center
   drawCurrentTime();
@@ -254,7 +342,7 @@ function drawCurrentTime() {
   }
 
   ctx.save();
-  ctx.fillStyle = "#0f0";
+  ctx.fillStyle = currentTheme.active;
   ctx.font = "48px monospace";
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
@@ -334,7 +422,7 @@ function drawSoundControls() {
   ctx.save();
 
   // Play button
-  ctx.strokeStyle = "#888";
+  ctx.strokeStyle = currentTheme.stroke;
   ctx.lineWidth = 2;
   ctx.strokeRect(
     PLAY_BUTTON_RECT.x,
@@ -343,7 +431,7 @@ function drawSoundControls() {
     PLAY_BUTTON_RECT.height
   );
   ctx.font = "24px monospace";
-  ctx.fillStyle = "#fff";
+  ctx.fillStyle = currentTheme.text;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(
@@ -361,7 +449,7 @@ function drawSoundControls() {
   );
 
   // Filled portion
-  ctx.fillStyle = "#0f0";
+  ctx.fillStyle = currentTheme.active;
   ctx.fillRect(
     VOLUME_BAR_RECT.x,
     VOLUME_BAR_RECT.y,
@@ -370,12 +458,35 @@ function drawSoundControls() {
   );
 
   // Volume text
-  ctx.fillStyle = "#fff";
+  ctx.fillStyle = currentTheme.text;
   ctx.font = "18px monospace";
   ctx.textAlign = "left";
   ctx.textBaseline = "bottom";
   const percent = Math.round(soundVolume * 100);
   ctx.fillText(`Vol ${percent}%`, VOLUME_BAR_RECT.x, VOLUME_BAR_RECT.y - 2);
 
+  // Draw theme button
+  drawThemeButton();
+
+  ctx.restore();
+}
+
+function drawThemeButton() {
+  ctx.save();
+  ctx.fillStyle = currentTheme.accent;
+  ctx.fillRect(
+    THEME_BUTTON_RECT.x,
+    THEME_BUTTON_RECT.y,
+    THEME_BUTTON_RECT.width,
+    THEME_BUTTON_RECT.height
+  );
+  ctx.strokeStyle = currentTheme.stroke;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(
+    THEME_BUTTON_RECT.x,
+    THEME_BUTTON_RECT.y,
+    THEME_BUTTON_RECT.width,
+    THEME_BUTTON_RECT.height
+  );
   ctx.restore();
 }
